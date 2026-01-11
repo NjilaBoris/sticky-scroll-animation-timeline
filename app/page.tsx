@@ -1,65 +1,142 @@
+"use client";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useLenis } from "lenis/react";
 import Image from "next/image";
+import { useEffect } from "react";
 
+gsap.registerPlugin(ScrollTrigger);
 export default function Home() {
+  const lenis = useLenis();
+  // useEffect(() => {
+  //   if (lenis) {
+  //     lenis.stop();
+  //   } else {
+  //     lenis.start();
+  //   }
+  // }, [lenis]);
+  useGSAP(() => {
+    const spotlightImgFinalPos = [
+      [-140, -140],
+      [40, -130],
+      [-160, 40],
+      [20, 30],
+    ];
+
+    const spotlightImages = document.querySelectorAll(".spotlight-img");
+
+    ScrollTrigger.create({
+      trigger: ".spotlight",
+      start: "top top",
+      end: `+${window.innerHeight * 6}px`,
+      pin: true,
+      pinSpacing: true,
+      scrub: 1,
+      onUpdate: (self) => {
+        const progress = self.progress;
+
+        const initialRotations = [5, -3, 3.5, -1];
+        const phaseOneStartOffsets = [0, 0.1, 0.2, 0.3];
+
+        spotlightImages.forEach((img, index) => {
+          const initialRotation = initialRotations[index];
+          const phase1Start = phaseOneStartOffsets[index];
+          const phase1End = Math.min(
+            phase1Start + (0.45 - phase1Start) * 0.9,
+            0.45
+          );
+
+          let x = -50;
+          let y, rotation;
+
+          if (progress < phase1Start) {
+            y = 200;
+            rotation = initialRotation;
+          } else if (progress <= 0.45) {
+            let phase1Progress;
+
+            if (progress >= phase1End) {
+              phase1Progress = 1;
+            } else {
+              const linearProgress =
+                (progress - phase1Start) / (phase1End - phase1Start);
+              phase1Progress = 1 - Math.pow(1 - linearProgress, 3);
+            }
+
+            y = 200 - phase1Progress * 250;
+            rotation = initialRotation;
+          } else {
+            y = -50;
+            rotation = initialRotation;
+          }
+
+          const phaseTwoStartOffsets = [0.5, 0.55, 0.6, 0.65];
+          const phase2Start = phaseTwoStartOffsets[index];
+          const phase2End = Math.min(
+            phase2Start + (0.95 - phase2Start) * 0.9,
+            0.95
+          );
+          const finalX = spotlightImgFinalPos[index][0];
+          const finalY = spotlightImgFinalPos[index][1];
+
+          if (progress >= phase2Start && progress <= 0.95) {
+            let phase2Progress;
+
+            if (progress >= phase2End) {
+              phase2Progress = 1;
+            } else {
+              const linearProgress =
+                (progress - phase2Start) / (phase2End - phase2Start);
+              phase2Progress = 1 - Math.pow(1 - linearProgress, 3);
+            }
+
+            x = -50 + (finalX + 50) * phase2Progress;
+            y = -50 + (finalY + 50) * phase2Progress;
+            rotation = initialRotation * (1 - phase2Progress);
+          } else if (progress > 0.95) {
+            x = finalX;
+            y = finalY;
+            rotation = 0;
+          }
+
+          gsap.set(img, {
+            transform: `translate(${x}%, ${y}%) rotate(${rotation}deg)`,
+          });
+        });
+      },
+    });
+  });
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <>
+      <section className="intro">
+        <h1>The art of selling becomes the art of sensing.</h1>
+      </section>
+
+      <section className="spotlight">
+        <div className="spotlight-header">
+          <h1>Time stretches differently inside this frame.</h1>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="spotlight-images">
+          <div className="spotlight-img">
+            <Image width={100} height={100} src="/img_1.jpg" alt="" />
+          </div>
+          <div className="spotlight-img">
+            <Image width={100} height={100} src="/img_2.jpg" alt="" />
+          </div>
+          <div className="spotlight-img">
+            <Image width={100} height={100} src="/img_3.jpg" alt="" />
+          </div>
+          <div className="spotlight-img">
+            <Image width={100} height={100} src="/img_4.jpg" alt="" />
+          </div>
         </div>
-      </main>
-    </div>
+      </section>
+
+      <section className="outro">
+        <h1>We make visuals breathe with quiet precision.</h1>
+      </section>
+    </>
   );
 }
